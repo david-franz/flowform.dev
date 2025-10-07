@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FlowFormProvider } from '@flowtomic/flowform-react';
 import type { FlowFormDefinition } from '@flowtomic/flowform';
 import { DefinitionEditor } from '@/components/DefinitionEditor';
@@ -7,6 +7,7 @@ import { ValuesInspector } from '@/components/ValuesInspector';
 import { PlaygroundToolbar } from '@/components/PlaygroundToolbar';
 import { DefinitionJsonPanel } from '@/components/DefinitionJsonPanel';
 import styles from './PlaygroundPage.module.css';
+import appStyles from '../styles/App.module.css';
 
 const starterDefinition: FlowFormDefinition = {
   id: 'customer-intake',
@@ -66,33 +67,105 @@ const starterDefinition: FlowFormDefinition = {
 export default function PlaygroundPage() {
   const [definition, setDefinition] = useState<FlowFormDefinition>(() => cloneDefinition(starterDefinition));
   const [showJson, setShowJson] = useState(false);
+  const [settingsCollapsed, setSettingsCollapsed] = useState(false);
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const mainElement = document.querySelector<HTMLElement>(`.${appStyles.main}`);
+    const headerElement = document.querySelector<HTMLElement>(`.${appStyles.header}`);
+    const footerElement = document.querySelector<HTMLElement>(`.${appStyles.footer}`);
+
+    const previousHtmlOverflow = html.style.overflow;
+    const previousBodyOverflow = body.style.overflow;
+    const previousMainPadding = mainElement?.style.padding ?? '';
+    const previousMainHeight = mainElement?.style.height ?? '';
+    const previousMainOverflow = mainElement?.style.overflow ?? '';
+
+    const applyLayoutSizing = () => {
+      if (!mainElement) {
+        return;
+      }
+      const headerHeight = headerElement?.offsetHeight ?? 0;
+      const footerHeight = footerElement?.offsetHeight ?? 0;
+      mainElement.style.padding = '0';
+      mainElement.style.height = `${window.innerHeight - headerHeight - footerHeight}px`;
+      mainElement.style.overflow = 'hidden';
+    };
+
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    applyLayoutSizing();
+    window.addEventListener('resize', applyLayoutSizing);
+
+    return () => {
+      html.style.overflow = previousHtmlOverflow;
+      body.style.overflow = previousBodyOverflow;
+      window.removeEventListener('resize', applyLayoutSizing);
+      if (mainElement) {
+        mainElement.style.padding = previousMainPadding;
+        mainElement.style.height = previousMainHeight;
+        mainElement.style.overflow = previousMainOverflow;
+      }
+    };
+  }, []);
 
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <h1>Playground</h1>
-        <p>
-          Experiment with FlowForm definitions, render them instantly, and inspect the resulting value state. All
-          updates sync with the FlowForm provider—what you see here is what Flowgraph and your apps will receive.
-        </p>
-      </header>
+    <FlowFormProvider definition={definition}>
+      <div className={styles.playground} data-settings-collapsed={settingsCollapsed ? 'true' : 'false'}>
+        {settingsCollapsed ? (
+          <button
+            type="button"
+            className={styles.settingsCollapsedHandle}
+            onClick={() => setSettingsCollapsed(false)}
+          >
+            Definition
+          </button>
+        ) : (
+          <aside className={styles.settingsPanel}>
+            <div className={styles.panelHeader}>
+              <div className={styles.panelHeaderText}>
+                <h1>Form definition</h1>
+                <p>
+                  Compose sections, tweak field behaviour, and watch Flowform render the schema live alongside the
+                  provider state.
+                </p>
+              </div>
+              <button type="button" className={styles.collapseToggle} onClick={() => setSettingsCollapsed(true)}>
+                Collapse
+              </button>
+            </div>
 
-      <FlowFormProvider definition={definition}>
-        <PlaygroundToolbar
-          showJson={showJson}
-          onToggleJson={() => setShowJson(value => !value)}
-          onResetDefinition={() => setDefinition(cloneDefinition(starterDefinition))}
-        />
-        <div className={styles.layout}>
-          <DefinitionEditor definition={definition} onChange={setDefinition} />
-          <div className={styles.previewSurface}>
-            <FlowFormRenderer />
+            <div className={styles.panelScroll}>
+              <DefinitionEditor definition={definition} onChange={setDefinition} />
+            </div>
+          </aside>
+        )}
+
+        <div className={styles.stage}>
+          <div className={styles.previewShell}>
+            <div className={styles.previewToolbar}>
+              <PlaygroundToolbar
+                showJson={showJson}
+                onToggleJson={() => setShowJson(value => !value)}
+                onResetDefinition={() => setDefinition(cloneDefinition(starterDefinition))}
+              />
+            </div>
+            <div className={styles.previewContent}>
+              <div className={styles.formWrapper}>
+                <FlowFormRenderer />
+              </div>
+            </div>
           </div>
-          <ValuesInspector />
-          {showJson && <DefinitionJsonPanel definition={definition} onApply={setDefinition} />}
+          <aside className={styles.inspectorPanel}>
+            <div className={styles.inspectorScroll}>
+              <ValuesInspector />
+              {showJson ? <DefinitionJsonPanel definition={definition} onApply={setDefinition} /> : null}
+            </div>
+          </aside>
         </div>
-      </FlowFormProvider>
-    </div>
+      </div>
+    </FlowFormProvider>
   );
 }
 

@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import DocsPage from './pages/DocsPage';
 import PlaygroundPage from './pages/PlaygroundPage';
 import styles from './styles/App.module.css';
+import { FLOWFORM_LOGO_DATA_URL } from './assets/flowformLogo';
 
 const routes = [
   { path: '/', label: 'Overview', element: <LandingPage /> },
@@ -15,7 +16,10 @@ export function App() {
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <div className={styles.brand}>FlowForm</div>
+        <NavLink to="/" className={styles.brand}>
+          <img src={FLOWFORM_LOGO_DATA_URL} alt="FlowForm logo" className={styles.brandMark} />
+          <span className={styles.brandText}>FlowForm</span>
+        </NavLink>
         <nav className={styles.nav}>
           {routes.map(route => (
             <NavLink

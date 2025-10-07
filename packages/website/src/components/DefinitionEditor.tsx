@@ -136,7 +136,7 @@ export function DefinitionEditor({ definition, onChange }: DefinitionEditorProps
   };
 
   return (
-    <aside className={styles.editor}>
+    <section className={styles.editor}>
       <header className={styles.header}>
         <h2>Definition builder</h2>
         <div className={styles.controlGroup}>
@@ -460,7 +460,7 @@ export function DefinitionEditor({ definition, onChange }: DefinitionEditorProps
           )}
         </section>
       )}
-    </aside>
+    </section>
   );
 }
 
