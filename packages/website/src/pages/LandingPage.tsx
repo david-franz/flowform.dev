@@ -1,52 +1,97 @@
 import styles from './LandingPage.module.css';
 
-const featureHighlights = [
+const highlights = [
   {
-    title: 'Schema-first',
+    title: 'Schema-first control',
     description:
-      'Describe complex multi-section forms with expressive TypeScript definitions. Compose layouts, defaults, and conditional logic without leaving your editor.',
+      'Describe sections, validations, and defaults with typed definitions. Flowform emits one schema that every surface can trust.',
   },
   {
-    title: 'Pixel & native ready',
+    title: 'Flowgraph ready',
     description:
-      'Ship the same definition to the FlowForm React renderer, the upcoming React Native kit, or embed inside Flowgraph nodes.',
+      'Share the same definitions with Flowgraph node inspectors so canvas builders and forms stay in sync.',
   },
   {
-    title: 'Playground powered',
+    title: 'Lightweight renderer',
     description:
-      'Iterate visually on the FlowForm playground and sync new capabilities straight into the docs and component library.',
+      'Drop the Flowform provider and renderer into any React experience. The playground uses the exact packages you ship.',
   },
 ];
 
 const roadmap = [
-  'Dynamic layouts with responsive grids and conditional sections',
-  'Renderer registry with slot-based composition and custom fields',
-  'Native bridge for React Native and Expo applications',
-  'Tight interoperability with Flowgraph node builders',
+  {
+    title: 'Responsive layouts',
+    description: 'Adaptive grid controls with breakpoint-aware widths and conditional sections.',
+  },
+  {
+    title: 'Renderer registry',
+    description: 'Bring your own field components with slot-based renderers and custom widgets.',
+  },
+  {
+    title: 'Definition tooling',
+    description: 'Expanded linting, diffing, and versioning support for long-lived schemas.',
+  },
+  {
+    title: 'Flowgraph sync',
+    description: 'Round-trip definitions between Flowgraph nodes and external apps with a single source of truth.',
+  },
 ];
 
 export default function LandingPage() {
   return (
-    <div className={styles.container}>
+    <div className={styles.landing}>
       <section className={styles.hero}>
-        <h1>FlowForm</h1>
-        <p>
-          The form engine that powers Flowtomic&apos;s next-generation configuration surfaces. Build once, render
-          anywhere—from Flowgraph nodes to standalone apps.
-        </p>
-        <div className={styles.ctas}>
-          <a className={styles.primaryCta} href="/playground">
-            Launch Playground
-          </a>
-          <a className={styles.secondaryCta} href="/docs">
-            Read the Docs
-          </a>
+        <div className={styles.heroCopy}>
+          <span className={styles.label}>Flowform</span>
+          <h1>Compose definition-driven forms for Flowgraph and beyond.</h1>
+          <p>
+            Flowform turns definition files into fully managed experiences. Capture intent once, hydrate it in Flowgraph
+            inspectors, and reuse the same schema inside your own apps without duplicating UI logic.
+          </p>
+          <div className={styles.actions}>
+            <a className={styles.primaryCta} href="/playground">
+              Launch playground
+            </a>
+            <a className={styles.secondaryCta} href="/docs">
+              Read the docs
+            </a>
+          </div>
+        </div>
+
+        <div className={styles.heroVisual}>
+          <div className={styles.formCard}>
+            <header>
+              <span className={styles.formTitle}>Assistant intake</span>
+              <span className={styles.formStatus}>Synced</span>
+            </header>
+            <div className={styles.formField}>
+              <span>Full name</span>
+              <div className={styles.formInput} aria-hidden="true" />
+            </div>
+            <div className={styles.formField}>
+              <span>Company size</span>
+              <div className={styles.formSelect} aria-hidden="true">
+                <span>11-200</span>
+                <span>▾</span>
+              </div>
+            </div>
+            <div className={styles.formField}>
+              <span>Notes</span>
+              <div className={styles.formTextarea} aria-hidden="true" />
+            </div>
+            <footer>
+              <div>
+                <span className={styles.badge}>Flowgraph inspector</span>
+              </div>
+              <button type="button">Submit</button>
+            </footer>
+          </div>
         </div>
       </section>
 
       <section className={styles.features}>
-        {featureHighlights.map(feature => (
-          <article key={feature.title} className={styles.featureCard}>
+        {highlights.map(feature => (
+          <article key={feature.title}>
             <h3>{feature.title}</h3>
             <p>{feature.description}</p>
           </article>
@@ -54,12 +99,21 @@ export default function LandingPage() {
       </section>
 
       <section className={styles.roadmap} id="roadmap">
-        <h2>Roadmap</h2>
-        <ul>
+        <div className={styles.roadmapCopy}>
+          <h2>What&apos;s next</h2>
+          <p>
+            We&apos;re shipping Flowform in lockstep with Flowgraph, expanding the schema, renderer, and playground as new
+            node capabilities land.
+          </p>
+        </div>
+        <div className={styles.roadmapItems}>
           {roadmap.map(item => (
-            <li key={item}>{item}</li>
+            <article key={item.title}>
+              <h4>{item.title}</h4>
+              <p>{item.description}</p>
+            </article>
           ))}
-        </ul>
+        </div>
       </section>
     </div>
   );

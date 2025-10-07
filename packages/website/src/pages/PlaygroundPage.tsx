@@ -68,6 +68,7 @@ export default function PlaygroundPage() {
   const [definition, setDefinition] = useState<FlowFormDefinition>(() => cloneDefinition(starterDefinition));
   const [showJson, setShowJson] = useState(false);
   const [settingsCollapsed, setSettingsCollapsed] = useState(false);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -112,7 +113,11 @@ export default function PlaygroundPage() {
 
   return (
     <FlowFormProvider definition={definition}>
-      <div className={styles.playground} data-settings-collapsed={settingsCollapsed ? 'true' : 'false'}>
+      <div
+        className={styles.playground}
+        data-settings-collapsed={settingsCollapsed ? 'true' : 'false'}
+        data-inspector-collapsed={inspectorCollapsed ? 'true' : 'false'}
+      >
         {settingsCollapsed ? (
           <button
             type="button"
@@ -142,7 +147,7 @@ export default function PlaygroundPage() {
           </aside>
         )}
 
-        <div className={styles.stage}>
+        <div className={styles.stage} data-inspector-collapsed={inspectorCollapsed ? 'true' : 'false'}>
           <div className={styles.previewShell}>
             <div className={styles.previewToolbar}>
               <PlaygroundToolbar
@@ -157,12 +162,28 @@ export default function PlaygroundPage() {
               </div>
             </div>
           </div>
-          <aside className={styles.inspectorPanel}>
-            <div className={styles.inspectorScroll}>
-              <ValuesInspector />
-              {showJson ? <DefinitionJsonPanel definition={definition} onApply={setDefinition} /> : null}
-            </div>
-          </aside>
+          {inspectorCollapsed ? (
+            <button
+              type="button"
+              className={styles.inspectorCollapsedHandle}
+              onClick={() => setInspectorCollapsed(false)}
+            >
+              Insights
+            </button>
+          ) : (
+            <aside className={styles.inspectorPanel}>
+              <div className={styles.inspectorPanelHeader}>
+                <span>Insights</span>
+                <button type="button" onClick={() => setInspectorCollapsed(true)}>
+                  Collapse
+                </button>
+              </div>
+              <div className={styles.inspectorScroll}>
+                <ValuesInspector />
+                {showJson ? <DefinitionJsonPanel definition={definition} onApply={setDefinition} /> : null}
+              </div>
+            </aside>
+          )}
         </div>
       </div>
     </FlowFormProvider>

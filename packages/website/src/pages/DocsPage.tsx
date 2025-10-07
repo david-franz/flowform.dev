@@ -1,100 +1,170 @@
 import styles from './DocsPage.module.css';
 
-const steps = [
-  {
-    heading: '1. Describe a FlowForm definition',
-    code: `import type { FlowFormDefinition } from '@flowtomic/flowform';
+const quickLinks = [
+  { title: 'Getting started', anchor: '#getting-started' },
+  { title: 'Definition anatomy', anchor: '#definition-anatomy' },
+  { title: 'Rendering in React', anchor: '#rendering' },
+  { title: 'Syncing with Flowgraph', anchor: '#flowgraph' },
+  { title: 'Runtime events', anchor: '#runtime-events' },
+  { title: 'Packages', anchor: '#packages' },
+  { title: 'Roadmap', anchor: '#roadmap' },
+];
 
-export const definition: FlowFormDefinition = {
-  id: 'assist-config',
-  title: 'Assistant Settings',
+const definitionSnippet = `import type { FlowFormDefinition } from '@flowtomic/flowform';
+
+export const intakeForm: FlowFormDefinition = {
+  id: 'assistant-intake',
+  title: 'Assistant Setup',
   sections: [
     {
-      id: 'general',
-      title: 'General',
+      id: 'profile',
+      title: 'Profile',
       fields: [
         { id: 'name', label: 'Display name', kind: 'text', required: true },
         { id: 'model', label: 'Model', kind: 'select', options: [
-          { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+          { value: 'gpt-4o', label: 'GPT-4o' },
           { value: 'sonnet-3.5', label: 'Claude Sonnet 3.5' }
-        ]}
+        ]},
+        { id: 'temperature', label: 'Temperature', kind: 'slider', min: 0, max: 1, step: 0.1 }
       ],
     },
   ],
-};`,
-  },
-  {
-    heading: '2. Render inside React',
-    code: `import { FlowFormProvider } from '@flowtomic/flowform-react';
+};`;
+
+const renderSnippet = `import { FlowFormProvider } from '@flowtomic/flowform-react';
 import { FlowFormRenderer } from '@/components/FlowFormRenderer';
 
-export function AssistantConfigForm() {
+export function IntakeForm() {
   return (
-    <FlowFormProvider definition={definition}>
+    <FlowFormProvider definition={intakeForm}>
       <FlowFormRenderer />
     </FlowFormProvider>
   );
-}`,
+}`;
+
+const runtimeEvents = [
+  { name: 'form.values', description: 'Mirror of the current form state. Subscribe to diff changes in Flowgraph.' },
+  {
+    name: 'form.change(fieldId, value)',
+    description: 'Emitted whenever a field mutates. Broker updates to Flowgraph nodes or custom analytics.',
   },
   {
-    heading: '3. Sync with Flowgraph',
-    description:
-      'Use FlowForm inside your Flowgraph node inspectors by sharing the same definitions. Flowgraph nodes can load FlowForm schemas, and FlowForm can emit node drafts back to Flowgraph when users submit. Shared form metadata keeps builders consistent across surfaces.',
+    name: 'form.submit()',
+    description: 'Trigger a submit from the renderer or call manually to push values upstream.',
   },
   {
-    heading: '4. Tune the experience',
-    description:
-      'Assign responsive widths, placeholders, slider ranges, textarea rows, and option sets directly in the definition editor. The playground keeps form state in sync while you tweak layouts, defaults, and conditional sections.',
+    name: 'form.reset()',
+    description: 'Reset values back to defaults while keeping observers informed.',
+  },
+];
+
+const packages = [
+  {
+    name: '@flowtomic/flowform',
+    description: 'Schema definition helpers, defaults, validation, and serialisation.',
+  },
+  {
+    name: '@flowtomic/flowform-react',
+    description: 'Provider, hooks, renderer primitives, and playground utilities.',
+  },
+  {
+    name: 'flowform-website',
+    description: 'This documentation site and playground wired to local packages.',
   },
 ];
 
 export default function DocsPage() {
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <h1>Developer docs</h1>
-        <p>
-          FlowForm ships as a workspaces trio: a schema & runtime core, a set of React bindings, and a documentation
-          playground. Each package can be consumed independently while still sharing a single source of truth.
-        </p>
-      </header>
-
-      <section className={styles.steps}>
-        {steps.map(step => (
-          <article key={step.heading} className={styles.step}>
-            <h3>{step.heading}</h3>
-            {step.description && <p>{step.description}</p>}
-            {step.code && <pre>
-              <code>{step.code}</code>
-            </pre>}
-          </article>
-        ))}
-      </section>
-
-      <section className={styles.grid}>
-        <div>
-          <h2>Packages</h2>
+    <div className={styles.docs}>
+      <aside className={styles.sidebar}>
+        <h2>On this page</h2>
+        <nav>
           <ul>
-            <li>
-              <strong>@flowtomic/flowform</strong> – schema, defaults, validation pipelines, and serialisation.
-            </li>
-            <li>
-              <strong>@flowtomic/flowform-react</strong> – hooks, providers, and renderer helpers.
-            </li>
-            <li>
-              <strong>flowform-website</strong> – docs + playground powered by local packages.
-            </li>
+            {quickLinks.map(link => (
+              <li key={link.anchor}>
+                <a href={link.anchor}>{link.title}</a>
+              </li>
+            ))}
           </ul>
-        </div>
-        <div>
-          <h2>Interoperability</h2>
+        </nav>
+      </aside>
+
+      <main className={styles.content}>
+        <section id="getting-started">
+          <h1>Flowform developer guide</h1>
           <p>
-            FlowForm definitions can be used to generate Flowgraph inspector panels, mobile-friendly dialogs, or embed
-            into custom experiences. Runtime events expose granular change tracking so Flowgraph can react to mutations
-            in real-time.
+            Flowform ships as a schema core, a set of renderer bindings, and a playground that exercises every feature.
+            Define your form once, stream updates into Flowgraph, and reuse the same definition across web and native
+            clients.
           </p>
-        </div>
-      </section>
+        </section>
+
+        <section id="definition-anatomy">
+          <h2>1. Describe a definition</h2>
+          <p>
+            Definitions are plain JSON objects. Sections group related fields and each field describes its renderer,
+            validation rules, defaults, and responsive width.
+          </p>
+          <pre>
+            <code>{definitionSnippet}</code>
+          </pre>
+        </section>
+
+        <section id="rendering">
+          <h2>2. Render inside React</h2>
+          <p>
+            Wrap the renderer with <code>FlowFormProvider</code> to expose hooks and context. The provider synchronises
+            values, emits events, and keeps field-level errors in sync.
+          </p>
+          <pre>
+            <code>{renderSnippet}</code>
+          </pre>
+        </section>
+
+        <section id="flowgraph">
+          <h2>3. Sync with Flowgraph</h2>
+          <p>
+            FlowGraph nodes can consume the same definition files. Publish your schema alongside node templates and
+            load them inside inspectors, nodes, or bespoke builder surfaces. Submit events can emit node drafts back to
+            Flowgraph so your automation stays in lockstep with form updates.
+          </p>
+        </section>
+
+        <section id="runtime-events">
+          <h2>4. Observe runtime events</h2>
+          <p>
+            The provider exposes lightweight event emitters so you can orchestrate behaviour without prop drilling. Use
+            them to populate analytics, synchronise Flowgraph previews, or persist state between sessions.
+          </p>
+          <ul>
+            {runtimeEvents.map(event => (
+              <li key={event.name}>
+                <strong>{event.name}</strong> — {event.description}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section id="packages" className={styles.packages}>
+          <h2>Packages</h2>
+          <div className={styles.packageGrid}>
+            {packages.map(pkg => (
+              <article key={pkg.name}>
+                <h3>{pkg.name}</h3>
+                <p>{pkg.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="roadmap" className={styles.roadmap}>
+          <h2>Roadmap</h2>
+          <p>
+            Flowform evolves alongside Flowgraph. Expect responsive layout primitives, richer field registries, and
+            deeper Flowgraph synchronisation as workflow builders continue to expand.
+          </p>
+        </section>
+      </main>
     </div>
   );
 }
