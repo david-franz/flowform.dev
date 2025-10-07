@@ -1,0 +1,25 @@
+{
+  "name": "@flowtomic/flowform-react",
+  "version": "0.0.1",
+  "description": "React bindings for @flowtomic/flowform.",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@flowtomic/flowform": "^0.0.1",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@flowtomic/flowform": "file:../..",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,68 @@
+.panel {
+  grid-column: 1 / -1;
+  background: rgba(15, 23, 42, 0.62);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+  box-shadow: 0 24px 45px rgba(2, 6, 23, 0.4);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 10px;
+}
+
+.headerActions button {
+  border-radius: 999px;
+  padding: 6px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(2, 6, 23, 0.65);
+  color: rgba(226, 232, 240, 0.85);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.headerActions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+textarea {
+  width: 100%;
+  min-height: 220px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(2, 6, 23, 0.75);
+  color: rgba(226, 232, 240, 0.9);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  padding: 14px;
+  resize: vertical;
+}
+
+.error {
+  margin: 0;
+  color: #fca5a5;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 720px) {
+  .panel {
+    padding: 16px;
+  }
+}

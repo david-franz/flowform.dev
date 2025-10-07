@@ -1,0 +1,44 @@
+.inspector {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 22px;
+  padding: 24px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 24px 45px rgba(2, 6, 23, 0.45);
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+.inspector header h2 {
+  margin: 0;
+}
+
+.inspector header p {
+  margin: 4px 0 0;
+  color: rgba(226, 232, 240, 0.65);
+  font-size: 0.9rem;
+}
+
+.inspector pre {
+  margin: 0;
+  background: rgba(2, 6, 23, 0.75);
+  border-radius: 16px;
+  padding: 16px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: rgba(226, 232, 240, 0.85);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 1280px) {
+  .inspector {
+    width: auto;
+    max-height: none;
+  }
+}
