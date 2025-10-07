@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { clsx } from 'clsx';
+import type { DragEvent } from 'react';
 import type {
   FlowFormDefinition,
   FlowFormFieldDefinition,
@@ -7,7 +9,23 @@ import type {
 } from '@flowtomic/flowform';
 import styles from './DefinitionEditor.module.css';
 
-const fieldKinds: FlowFormFieldKind[] = ['text', 'textarea', 'number', 'select', 'checkbox', 'switch', 'slider'];
+const fieldKinds: FlowFormFieldKind[] = [
+  'text',
+  'textarea',
+  'number',
+  'select',
+  'multiselect',
+  'radio',
+  'checkbox',
+  'switch',
+  'slider',
+  'password',
+  'email',
+  'url',
+  'date',
+  'time',
+  'color',
+];
 const widthOptions: Array<{ value: FlowFormFieldWidth; label: string }> = [
   { value: 'full', label: 'Full width' },
   { value: 'half', label: 'Half width' },
@@ -22,6 +40,7 @@ interface DefinitionEditorProps {
 export function DefinitionEditor({ definition, onChange }: DefinitionEditorProps) {
   const [activeSectionId, setActiveSectionId] = useState(definition.sections[0]?.id ?? '');
   const [activeFieldId, setActiveFieldId] = useState(definition.sections[0]?.fields[0]?.id ?? '');
+  const [activeFieldTab, setActiveFieldTab] = useState<FieldTabKey>('content');
 
   useEffect(() => {
     if (!definition.sections.find(section => section.id === activeSectionId)) {
@@ -41,12 +60,25 @@ export function DefinitionEditor({ definition, onChange }: DefinitionEditorProps
     }
   }, [activeSectionId, activeFieldId, definition.sections]);
 
+  useEffect(() => {
+    setActiveFieldTab('content');
+  }, [activeFieldId, activeSectionId]);
+
   const activeSection = useMemo(
     () => definition.sections.find(section => section.id === activeSectionId),
     [activeSectionId, definition.sections]
   );
 
   const activeField = useMemo(() => activeSection?.fields.find(field => field.id === activeFieldId), [activeFieldId, activeSection]);
+
+  const fieldEditorTabs = useMemo(
+    () => [
+      { key: 'content' as FieldTabKey, label: 'Content' },
+      { key: 'data' as FieldTabKey, label: 'Data' },
+      { key: 'display' as FieldTabKey, label: 'Display' },
+    ],
+    []
+  );
 
   const updateDefinition = (mutator: (draft: FlowFormDefinition) => void) => {
     const draft = cloneDefinition(definition);
@@ -135,6 +167,64 @@ export function DefinitionEditor({ definition, onChange }: DefinitionEditorProps
     }
   };
 
+  const handleReorderSections = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) {
+      return;
+    }
+    updateDefinition(draft => {
+      const sections = draft.sections as FlowFormSectionMutable[];
+      const fromIndex = sections.findIndex(section => section.id === sourceId);
+      const toIndex = sections.findIndex(section => section.id === targetId);
+      if (fromIndex === -1 || toIndex === -1) {
+        return;
+      }
+      const [moved] = sections.splice(fromIndex, 1);
+      sections.splice(toIndex, 0, moved);
+    });
+  };
+
+  const handleReorderFields = (sectionId: string, sourceId: string, targetId: string) => {
+    if (sourceId === targetId) {
+      return;
+    }
+    updateSection(sectionId, section => {
+      const fields = section.fields as FlowFormFieldMutable[];
+      const fromIndex = fields.findIndex(field => field.id === sourceId);
+      const toIndex = fields.findIndex(field => field.id === targetId);
+      if (fromIndex === -1 || toIndex === -1) {
+        return;
+      }
+      const [moved] = fields.splice(fromIndex, 1);
+      fields.splice(toIndex, 0, moved);
+    });
+  };
+
+  const handleSectionDragStart = (event: DragEvent<HTMLButtonElement>, sectionId: string) => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('application/flowform-section', sectionId);
+  };
+
+  const handleSectionDrop = (event: DragEvent<HTMLButtonElement>, targetId: string) => {
+    event.preventDefault();
+    const sourceId = event.dataTransfer.getData('application/flowform-section');
+    if (sourceId) {
+      handleReorderSections(sourceId, targetId);
+    }
+  };
+
+  const handleFieldDragStart = (event: DragEvent<HTMLButtonElement>, fieldId: string) => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('application/flowform-field', fieldId);
+  };
+
+  const handleFieldDrop = (event: DragEvent<HTMLButtonElement>, sectionId: string, targetId: string) => {
+    event.preventDefault();
+    const sourceId = event.dataTransfer.getData('application/flowform-field');
+    if (sourceId) {
+      handleReorderFields(sectionId, sourceId, targetId);
+    }
+  };
+
   return (
     <section className={styles.editor}>
       <header className={styles.header}>
@@ -166,6 +256,10 @@ export function DefinitionEditor({ definition, onChange }: DefinitionEditorProps
               type="button"
               className={section.id === activeSectionId ? styles.sectionTabActive : styles.sectionTab}
               onClick={() => setActiveSectionId(section.id)}
+              draggable
+              onDragStart={event => handleSectionDragStart(event, section.id)}
+              onDragOver={event => event.preventDefault()}
+              onDrop={event => handleSectionDrop(event, section.id)}
             >
               <span>{section.title ?? section.id}</span>
               {definition.sections.length > 1 && (
@@ -227,6 +321,10 @@ export function DefinitionEditor({ definition, onChange }: DefinitionEditorProps
                 type="button"
                 className={field.id === activeFieldId ? styles.fieldTabActive : styles.fieldTab}
                 onClick={() => setActiveFieldId(field.id)}
+                draggable
+                onDragStart={event => handleFieldDragStart(event, field.id)}
+                onDragOver={event => event.preventDefault()}
+                onDrop={event => handleFieldDrop(event, activeSection.id, field.id)}
               >
                 <span>{field.label || field.id}</span>
                 <span
@@ -244,218 +342,252 @@ export function DefinitionEditor({ definition, onChange }: DefinitionEditorProps
 
           {activeField && (
             <div className={styles.fieldEditor}>
-              <label>
-                <span>Field label</span>
-                <input
-                  value={activeField.label}
-                  onChange={event =>
-                    updateField(activeSection.id, activeField.id, field => {
-                      field.label = event.target.value;
-                    })
-                  }
-                />
-              </label>
-              <label>
-                <span>Field id</span>
-                <input
-                  value={activeField.id}
-                  onChange={event => {
-                    const nextId = event.target.value.trim();
-                    if (!nextId) {
-                      return;
-                    }
+              <div className={styles.fieldEditorTabs}>
+                {fieldEditorTabs.map(tab => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    className={clsx(
+                      styles.fieldEditorTab,
+                      activeFieldTab === tab.key && styles.fieldEditorTabActive
+                    )}
+                    onClick={() => setActiveFieldTab(tab.key)}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-                    const duplicate = activeSection.fields.some(field => field.id === nextId && field.id !== activeField.id);
-                    if (duplicate) {
-                      return;
-                    }
+              <div className={styles.fieldEditorPanel}>
+                {activeFieldTab === 'content' && (
+                  <div className={styles.fieldGrid}>
+                    <label>
+                      <span>Field label</span>
+                      <input
+                        value={activeField.label}
+                        onChange={event =>
+                          updateField(activeSection.id, activeField.id, field => {
+                            field.label = event.target.value;
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>Field id</span>
+                      <input
+                        value={activeField.id}
+                        onChange={event => {
+                          const nextId = event.target.value.trim();
+                          if (!nextId) {
+                            return;
+                          }
 
-                    updateSection(activeSection.id, section => {
-                      const target = section.fields.find(field => field.id === activeField.id);
-                      if (!target) {
-                        return;
-                      }
-                      target.id = nextId;
-                    });
-                    setActiveFieldId(nextId);
-                  }}
-                />
-              </label>
-              <label>
-                <span>Type</span>
-                <select
-                  value={activeField.kind}
-                  onChange={event =>
-                    updateField(activeSection.id, activeField.id, field => {
-                      const nextKind = event.target.value as FlowFormFieldKind;
-                      field.kind = nextKind;
+                          const duplicate = activeSection.fields.some(
+                            field => field.id === nextId && field.id !== activeField.id,
+                          );
+                          if (duplicate) {
+                            return;
+                          }
 
-                      if (nextKind !== 'select') {
-                        delete field.options;
-                      } else if (!field.options || field.options.length === 0) {
-                        field.options = [
-                          { value: 'option-1', label: 'Option 1' },
-                          { value: 'option-2', label: 'Option 2' },
-                        ];
-                      }
+                          updateSection(activeSection.id, section => {
+                            const target = section.fields.find(field => field.id === activeField.id);
+                            if (!target) {
+                              return;
+                            }
+                            target.id = nextId;
+                          });
+                          setActiveFieldId(nextId);
+                        }}
+                      />
+                    </label>
+                    <label>
+                      <span>Type</span>
+                      <select
+                        value={activeField.kind}
+                        onChange={event =>
+                          updateField(activeSection.id, activeField.id, field => {
+                            const nextKind = event.target.value as FlowFormFieldKind;
+                            field.kind = nextKind;
 
-                      if (!supportsPlaceholder(nextKind)) {
-                        delete field.placeholder;
-                      }
+                            if (!supportsOptions(nextKind)) {
+                              delete field.options;
+                            } else if (!field.options || field.options.length === 0) {
+                              field.options = [
+                                { value: 'option-1', label: 'Option 1' },
+                                { value: 'option-2', label: 'Option 2' },
+                              ];
+                            }
 
-                      if (!supportsNumericConfig(nextKind)) {
-                        delete field.min;
-                        delete field.max;
-                        delete field.step;
-                      }
+                            if (!supportsPlaceholder(nextKind)) {
+                              delete field.placeholder;
+                            }
 
-                      if (!supportsRows(nextKind)) {
-                        delete field.rows;
-                      }
-                    })
-                  }
-                >
-                  {fieldKinds.map(kind => (
-                    <option key={kind} value={kind}>
-                      {kind}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {supportsPlaceholder(activeField.kind) && (
-                <label>
-                  <span>Placeholder</span>
-                  <input
-                    value={activeField.placeholder ?? ''}
-                    onChange={event =>
-                      updateField(activeSection.id, activeField.id, field => {
-                        field.placeholder = event.target.value || undefined;
-                      })
-                    }
-                  />
-                </label>
-              )}
-              <label>
-                <span>Field width</span>
-                <select
-                  value={activeField.width ?? 'full'}
-                  onChange={event =>
-                    updateField(activeSection.id, activeField.id, field => {
-                      field.width = event.target.value as FlowFormFieldWidth;
-                    })
-                  }
-                >
-                  {widthOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={styles.checkboxRow}>
-                <input
-                  type="checkbox"
-                  checked={Boolean(activeField.required)}
-                  onChange={event =>
-                    updateField(activeSection.id, activeField.id, field => {
-                      field.required = event.target.checked || undefined;
-                    })
-                  }
-                />
-                <span>Required</span>
-              </label>
-              <label>
-                <span>Description</span>
-                <textarea
-                  value={activeField.description ?? ''}
-                  placeholder="Explain the intent of this field"
-                  onChange={event =>
-                    updateField(activeSection.id, activeField.id, field => {
-                      field.description = event.target.value || undefined;
-                    })
-                  }
-                />
-              </label>
-              {supportsNumericConfig(activeField.kind) && (
-                <div className={styles.numericRow}>
-                  <label>
-                    <span>Min</span>
-                    <input
-                      type="number"
-                      value={activeField.min ?? ''}
-                      onChange={event =>
-                        updateField(activeSection.id, activeField.id, field => {
-                          field.min = coerceNumber(event.target.value);
-                        })
-                      }
-                    />
-                  </label>
-                  <label>
-                    <span>Max</span>
-                    <input
-                      type="number"
-                      value={activeField.max ?? ''}
-                      onChange={event =>
-                        updateField(activeSection.id, activeField.id, field => {
-                          field.max = coerceNumber(event.target.value);
-                        })
-                      }
-                    />
-                  </label>
-                  <label>
-                    <span>Step</span>
-                    <input
-                      type="number"
-                      value={activeField.step ?? ''}
-                      onChange={event =>
-                        updateField(activeSection.id, activeField.id, field => {
-                          field.step = coerceNumber(event.target.value);
-                        })
-                      }
-                    />
-                  </label>
-                </div>
-              )}
-              {supportsRows(activeField.kind) && (
-                <label>
-                  <span>Rows</span>
-                  <input
-                    type="number"
-                    value={activeField.rows ?? ''}
-                    onChange={event =>
-                      updateField(activeSection.id, activeField.id, field => {
-                        const nextValue = event.target.value;
-                        field.rows = nextValue ? Math.max(1, Number(nextValue)) : undefined;
-                      })
-                    }
-                  />
-                </label>
-              )}
-              <label>
-                <span>Default value</span>
-                <input
-                  value={stringifyDefault(activeField.defaultValue)}
-                  placeholder="Computed automatically when blank"
-                  onChange={event =>
-                    updateField(activeSection.id, activeField.id, field => {
-                      field.defaultValue = parseDefault(event.target.value, field.kind);
-                    })
-                  }
-                />
-              </label>
-              {activeField.kind === 'select' && (
-                <label>
-                  <span>Options (value:label per line)</span>
-                  <textarea
-                    value={serializeOptions(activeField.options)}
-                    onChange={event =>
-                      updateField(activeSection.id, activeField.id, field => {
-                        field.options = parseOptions(event.target.value);
-                      })
-                    }
-                  />
-                </label>
-              )}
+                            if (!supportsNumericConfig(nextKind)) {
+                              delete field.min;
+                              delete field.max;
+                              delete field.step;
+                            }
+
+                            if (!supportsRows(nextKind)) {
+                              delete field.rows;
+                            }
+                          })
+                        }
+                      >
+                        {fieldKinds.map(kind => (
+                          <option key={kind} value={kind}>
+                            {kind}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className={styles.fieldGridFull}>
+                      <span>Description</span>
+                      <textarea
+                        value={activeField.description ?? ''}
+                        placeholder="Explain the intent of this field"
+                        onChange={event =>
+                          updateField(activeSection.id, activeField.id, field => {
+                            field.description = event.target.value || undefined;
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {activeFieldTab === 'data' && (
+                  <div className={styles.fieldGrid}>
+                    <label className={clsx(styles.checkboxRow, styles.fieldGridFull)}>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(activeField.required)}
+                        onChange={event =>
+                          updateField(activeSection.id, activeField.id, field => {
+                            field.required = event.target.checked || undefined;
+                          })
+                        }
+                      />
+                      <span>Required</span>
+                    </label>
+                    <label className={styles.fieldGridFull}>
+                      <span>Default value</span>
+                      <input
+                        value={stringifyDefault(activeField.defaultValue)}
+                        placeholder="Computed automatically when blank"
+                        onChange={event =>
+                          updateField(activeSection.id, activeField.id, field => {
+                            field.defaultValue = parseDefault(event.target.value, field.kind);
+                          })
+                        }
+                      />
+                    </label>
+                    {supportsNumericConfig(activeField.kind) && (
+                      <div className={clsx(styles.numericRow, styles.fieldGridFull)}>
+                        <label>
+                          <span>Min</span>
+                          <input
+                            type="number"
+                            value={activeField.min ?? ''}
+                            onChange={event =>
+                              updateField(activeSection.id, activeField.id, field => {
+                                field.min = coerceNumber(event.target.value);
+                              })
+                            }
+                          />
+                        </label>
+                        <label>
+                          <span>Max</span>
+                          <input
+                            type="number"
+                            value={activeField.max ?? ''}
+                            onChange={event =>
+                              updateField(activeSection.id, activeField.id, field => {
+                                field.max = coerceNumber(event.target.value);
+                              })
+                            }
+                          />
+                        </label>
+                        <label>
+                          <span>Step</span>
+                          <input
+                            type="number"
+                            value={activeField.step ?? ''}
+                            onChange={event =>
+                              updateField(activeSection.id, activeField.id, field => {
+                                field.step = coerceNumber(event.target.value);
+                              })
+                            }
+                          />
+                        </label>
+                      </div>
+                    )}
+                    {supportsOptions(activeField.kind) && (
+                      <label className={styles.fieldGridFull}>
+                        <span>Options (value:label per line)</span>
+                        <textarea
+                          value={serializeOptions(activeField.options)}
+                          onChange={event =>
+                            updateField(activeSection.id, activeField.id, field => {
+                              field.options = parseOptions(event.target.value);
+                            })
+                          }
+                        />
+                      </label>
+                    )}
+                  </div>
+                )}
+
+                {activeFieldTab === 'display' && (
+                  <div className={styles.fieldGrid}>
+                    {supportsPlaceholder(activeField.kind) && (
+                      <label>
+                        <span>Placeholder</span>
+                        <input
+                          value={activeField.placeholder ?? ''}
+                          onChange={event =>
+                            updateField(activeSection.id, activeField.id, field => {
+                              field.placeholder = event.target.value || undefined;
+                            })
+                          }
+                        />
+                      </label>
+                    )}
+                    <label>
+                      <span>Field width</span>
+                      <select
+                        value={activeField.width ?? 'full'}
+                        onChange={event =>
+                          updateField(activeSection.id, activeField.id, field => {
+                            field.width = event.target.value as FlowFormFieldWidth;
+                          })
+                        }
+                      >
+                        {widthOptions.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {supportsRows(activeField.kind) && (
+                      <label>
+                        <span>Rows</span>
+                        <input
+                          type="number"
+                          value={activeField.rows ?? ''}
+                          onChange={event =>
+                            updateField(activeSection.id, activeField.id, field => {
+                              const nextValue = event.target.value;
+                              field.rows = nextValue ? Math.max(1, Number(nextValue)) : undefined;
+                            })
+                          }
+                        />
+                      </label>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </section>
@@ -505,6 +637,20 @@ const parseDefault = (raw: string, kind: FlowFormFieldKind): unknown => {
     case 'checkbox':
     case 'switch':
       return raw === 'true' || raw === '1' || raw.toLowerCase() === 'yes';
+    case 'multiselect': {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.map(item => String(item));
+        }
+      } catch (error) {
+        // fall through to string parsing
+      }
+      return raw
+        .split(/[,\n]/)
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
     default:
       return raw;
   }
@@ -537,8 +683,22 @@ const parseOptions = (raw: string): FlowFormFieldDefinition['options'] => {
 const cloneDefinition = (definition: FlowFormDefinition): FlowFormDefinition =>
   JSON.parse(JSON.stringify(definition)) as FlowFormDefinition;
 
+type FieldTabKey = 'content' | 'data' | 'display';
+
+const supportsOptions = (kind: FlowFormFieldKind): boolean =>
+  kind === 'select' || kind === 'radio' || kind === 'multiselect';
+
 const supportsPlaceholder = (kind: FlowFormFieldKind): boolean =>
-  kind === 'text' || kind === 'textarea' || kind === 'number' || kind === 'select';
+  kind === 'text' ||
+  kind === 'textarea' ||
+  kind === 'number' ||
+  kind === 'select' ||
+  kind === 'password' ||
+  kind === 'email' ||
+  kind === 'url' ||
+  kind === 'date' ||
+  kind === 'time' ||
+  kind === 'color';
 
 const supportsNumericConfig = (kind: FlowFormFieldKind): boolean => kind === 'number' || kind === 'slider';
 

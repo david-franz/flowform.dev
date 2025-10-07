@@ -26,7 +26,12 @@ export function FlowFormRenderer() {
             onChange={event => onValueChange(event.target.value)}
           />
         );
-      case 'select':
+      case 'select': {
+        const options = field.options ?? [];
+        if (!options.length) {
+          return <div className={styles.emptyState}>Add options in the definition editor.</div>;
+        }
+
         return (
           <select
             id={field.id}
@@ -37,13 +42,70 @@ export function FlowFormRenderer() {
             <option value="" disabled>
               {field.placeholder ?? 'Select…'}
             </option>
-            {(field.options ?? []).map(option => (
+            {options.map(option => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
         );
+      }
+      case 'multiselect': {
+        const options = field.options ?? [];
+        if (!options.length) {
+          return <div className={styles.emptyState}>Add options in the definition editor.</div>;
+        }
+
+        const selectedValues = Array.isArray(value)
+          ? value.map(item => String(item))
+          : value
+            ? [String(value)]
+            : [];
+
+        return (
+          <select
+            id={field.id}
+            multiple
+            required={field.required}
+            value={selectedValues}
+            onChange={event =>
+              onValueChange(Array.from(event.target.selectedOptions, option => option.value))
+            }
+          >
+            {options.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        );
+      }
+      case 'radio': {
+        const options = field.options ?? [];
+        if (!options.length) {
+          return <div className={styles.emptyState}>Add options in the definition editor.</div>;
+        }
+
+        const currentValue = value === undefined || value === null ? '' : String(value);
+
+        return (
+          <div className={styles.radioGroup}>
+            {options.map(option => (
+              <label key={option.value} className={styles.radioOption}>
+                <input
+                  type="radio"
+                  name={field.id}
+                  value={option.value}
+                  checked={currentValue === option.value}
+                  required={field.required}
+                  onChange={event => onValueChange(event.target.value)}
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </div>
+        );
+      }
       case 'number':
         return (
           <input
@@ -85,6 +147,33 @@ export function FlowFormRenderer() {
             />
             <span>{value ?? field.defaultValue ?? field.min ?? 0}</span>
           </div>
+        );
+      case 'color': {
+        const currentColor = typeof value === 'string' && value ? value : '#000000';
+        return (
+          <input
+            id={field.id}
+            type="color"
+            value={currentColor}
+            required={field.required}
+            onChange={event => onValueChange(event.target.value)}
+          />
+        );
+      }
+      case 'password':
+      case 'email':
+      case 'url':
+      case 'date':
+      case 'time':
+        return (
+          <input
+            id={field.id}
+            type={field.kind}
+            value={String(value ?? '')}
+            placeholder={field.placeholder}
+            required={field.required}
+            onChange={event => onValueChange(event.target.value)}
+          />
         );
       case 'text':
       default:

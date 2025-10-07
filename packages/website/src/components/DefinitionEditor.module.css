@@ -95,12 +95,18 @@ textarea {
   color: rgba(226, 232, 240, 0.75);
   cursor: pointer;
   gap: 12px;
+  cursor: grab;
 }
 
 .sectionTabActive {
   border-color: rgba(56, 189, 248, 0.6);
   color: #f8fafc;
   background: rgba(15, 23, 42, 0.9);
+}
+
+.sectionTab:active,
+.sectionTabActive:active {
+  cursor: grabbing;
 }
 
 .remove {
@@ -134,6 +140,7 @@ textarea {
   background: rgba(2, 6, 23, 0.7);
   color: rgba(226, 232, 240, 0.75);
   cursor: pointer;
+  cursor: grab;
 }
 
 .fieldTabActive {
@@ -142,15 +149,61 @@ textarea {
   background: rgba(79, 70, 229, 0.25);
 }
 
+.fieldTab:active,
+.fieldTabActive:active {
+  cursor: grabbing;
+}
+
 .fieldEditor {
   display: grid;
-  gap: 14px;
+  gap: 18px;
+}
+
+.fieldEditorTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fieldEditorTab,
+.fieldEditorTabActive {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.75);
+  color: rgba(226, 232, 240, 0.8);
+  padding: 6px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.fieldEditorTabActive {
+  border-color: rgba(129, 140, 248, 0.6);
+  background: rgba(79, 70, 229, 0.25);
+  color: #f8fafc;
+}
+
+.fieldEditorPanel {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.fieldGridFull {
+  grid-column: 1 / -1;
 }
 
 .numericRow {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  width: 100%;
 }
 
 .numericRow label input {

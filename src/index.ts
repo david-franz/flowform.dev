@@ -5,7 +5,15 @@ export type FlowFormFieldKind =
   | 'select'
   | 'checkbox'
   | 'switch'
-  | 'slider';
+  | 'slider'
+  | 'password'
+  | 'email'
+  | 'url'
+  | 'date'
+  | 'time'
+  | 'color'
+  | 'radio'
+  | 'multiselect';
 
 export type FlowFormFieldWidth = 'full' | 'half' | 'third';
 

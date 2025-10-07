@@ -3,6 +3,7 @@ import styles from './DocsPage.module.css';
 const quickLinks = [
   { title: 'Getting started', anchor: '#getting-started' },
   { title: 'Definition anatomy', anchor: '#definition-anatomy' },
+  { title: 'Field types', anchor: '#field-types' },
   { title: 'Rendering in React', anchor: '#rendering' },
   { title: 'Syncing with Flowgraph', anchor: '#flowgraph' },
   { title: 'Runtime events', anchor: '#runtime-events' },
@@ -108,6 +109,31 @@ export default function DocsPage() {
           <pre>
             <code>{definitionSnippet}</code>
           </pre>
+        </section>
+
+        <section id="field-types">
+          <h2>Available field types</h2>
+          <p>
+            Flowform ships with a growing renderer library. Use the definition builder to configure any of the
+            following field kinds:
+          </p>
+          <ul className={styles.inlineList}>
+            <li>text</li>
+            <li>textarea</li>
+            <li>number</li>
+            <li>select</li>
+            <li>multiselect</li>
+            <li>radio</li>
+            <li>checkbox</li>
+            <li>switch</li>
+            <li>slider</li>
+            <li>password</li>
+            <li>email</li>
+            <li>url</li>
+            <li>date</li>
+            <li>time</li>
+            <li>color</li>
+          </ul>
         </section>
 
         <section id="rendering">
