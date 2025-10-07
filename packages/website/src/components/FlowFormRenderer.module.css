@@ -10,9 +10,39 @@
   min-height: 320px;
 }
 
-.formSurface h2 {
+.formHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formHeader h2 {
   margin: 0;
   font-size: 1.5rem;
+}
+
+.sectionTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.sectionTab,
+.sectionTabActive {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(9, 14, 24, 0.7);
+  color: rgba(226, 232, 240, 0.8);
+  padding: 0.4rem 1.1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.sectionTabActive {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.25));
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #f8fafc;
 }
 
 .section {

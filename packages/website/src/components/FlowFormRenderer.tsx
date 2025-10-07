@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { clsx } from 'clsx';
 import { useFlowForm } from '@flowtomic/flowform-react';
 import type { FlowFormFieldDefinition } from '@flowtomic/flowform';
@@ -6,6 +6,14 @@ import styles from './FlowFormRenderer.module.css';
 
 export function FlowFormRenderer() {
   const { form, updateValues } = useFlowForm();
+  const sections = useMemo(() => form.definition.sections ?? [], [form.definition.sections]);
+  const [activeSectionId, setActiveSectionId] = useState<string>(() => sections[0]?.id ?? '');
+
+  useEffect(() => {
+    if (!sections.find(section => section.id === activeSectionId)) {
+      setActiveSectionId(sections[0]?.id ?? '');
+    }
+  }, [sections, activeSectionId]);
 
   const renderField = (field: FlowFormFieldDefinition) => {
     const value = form.values[field.id];
@@ -192,35 +200,54 @@ export function FlowFormRenderer() {
 
   return (
     <div className={styles.formSurface}>
-      {form.definition.title && <h2>{form.definition.title}</h2>}
-      {form.definition.sections.map(section => (
+      <div className={styles.formHeader}>
+        {form.definition.title && <h2>{form.definition.title}</h2>}
+        {sections.length > 1 && (
+          <nav className={styles.sectionTabs} aria-label="Form sections">
+            {sections.map(section => (
+              <button
+                key={section.id}
+                type="button"
+                className={clsx(styles.sectionTab, activeSectionId === section.id && styles.sectionTabActive)}
+                onClick={() => setActiveSectionId(section.id)}
+              >
+                {section.title ?? section.id}
+              </button>
+            ))}
+          </nav>
+        )}
+      </div>
+
+      {sections.map(section => (
         <Fragment key={section.id}>
-          <section className={styles.section}>
-            <header className={styles.sectionHeader}>
-              {section.title && <h3>{section.title}</h3>}
-              {section.description && <p>{section.description}</p>}
-            </header>
-            <div className={styles.fieldsGrid}>
-              {section.fields.map(field => (
-                <label
-                  key={field.id}
-                  htmlFor={field.id}
-                  className={clsx(
-                    styles.field,
-                    field.width === 'half' && styles.fieldHalf,
-                    field.width === 'third' && styles.fieldThird
-                  )}
-                >
-                  <span className={styles.fieldLabel}>
-                    {field.label}
-                    {field.required && <sup>*</sup>}
-                  </span>
-                  {renderField(field)}
-                  {field.description && <small>{field.description}</small>}
-                </label>
-              ))}
-            </div>
-          </section>
+          {section.id === activeSectionId && (
+            <section className={styles.section}>
+              <header className={styles.sectionHeader}>
+                {section.title && <h3>{section.title}</h3>}
+                {section.description && <p>{section.description}</p>}
+              </header>
+              <div className={styles.fieldsGrid}>
+                {section.fields.map(field => (
+                  <label
+                    key={field.id}
+                    htmlFor={field.id}
+                    className={clsx(
+                      styles.field,
+                      field.width === 'half' && styles.fieldHalf,
+                      field.width === 'third' && styles.fieldThird
+                    )}
+                  >
+                    <span className={styles.fieldLabel}>
+                      {field.label}
+                      {field.required && <sup>*</sup>}
+                    </span>
+                    {renderField(field)}
+                    {field.description && <small>{field.description}</small>}
+                  </label>
+                ))}
+              </div>
+            </section>
+          )}
         </Fragment>
       ))}
     </div>
