@@ -1,0 +1,46 @@
+name: Deploy flowform.dev website
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/website/**'
+      - 'packages/react/**'
+      - 'src/**'
+      - '.github/workflows/deploy.yml'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/website/package-lock.json
+
+      - name: Install website dependencies
+        run: npm ci
+        working-directory: packages/website
+
+      - name: Build website
+        run: npm run build
+        working-directory: packages/website
+
+      - name: Deploy to Azure Static Web Apps (flowform.dev)
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: packages/website/dist
+          skip_app_build: true
